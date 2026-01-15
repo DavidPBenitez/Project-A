@@ -5,48 +5,66 @@ namespace Assignment_A1_03;
 
 class Program
 {
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
         OpenWeatherService service = new OpenWeatherService();
+        service.WeatherForecastAvailable += Service_WeatherForecastAvailable;
 
-        //Register the event
-        //Your Code
+        double latitude = 60.6749;
+        double longitude = 17.1413;
 
-        Task<Forecast>[] tasks = { null, null, null, null };
-        Exception exception = null;
+        Console.WriteLine("First set of requests");
+        var task1 = service.GetForecastAsync(latitude, longitude);
+        var task2 = service.GetForecastAsync("Gävle");
+        
+        await Task.WhenAll(task1, task2);
+        
+        await PrintForecastTask(task1);
+        await PrintForecastTask(task2);
+
+        Console.WriteLine("Second set of requests");
+        
+        var task3 = service.GetForecastAsync(latitude, longitude);
+        var task4 = service.GetForecastAsync("Gävle");
+        
+        await Task.WhenAll(task3, task4);
+        
+        await PrintForecastTask(task3);
+        await PrintForecastTask(task4);
+
+        Console.WriteLine("\nInvalid City Test");
+        var task5 = service.GetForecastAsync("ThisIsNotACity");
+        await PrintForecastTask(task5);
+    }
+
+    private static async Task PrintForecastTask(Task<Forecast> task)
+    {
         try
         {
-            double latitude = 59.5086798659495;
-            double longitude = 18.2654625932976;
-
-            //Create the two tasks and wait for comletion
-            tasks[0] = service.GetForecastAsync(latitude, longitude);
-            tasks[1] = service.GetForecastAsync("Miami");
-
-            Task.WaitAll(tasks[0], tasks[1]);
-
-            tasks[2] = service.GetForecastAsync(latitude, longitude);
-            tasks[3] = service.GetForecastAsync("Miami");
-
-            //Wait and confirm we get an event showing cahced data avaialable
-            Task.WaitAll(tasks[2], tasks[3]);
+            Forecast forecast = await task;
+            Console.WriteLine($"\nWeather forecast for {forecast.City}");
+            
+            var grouped = forecast.Items.GroupBy(item => item.DateTime.Date);
+            
+            foreach (var group in grouped)
+            {
+                Console.WriteLine($"{group.Key:yyyy-MM-dd}");
+                
+                foreach (var item in group)
+                {
+                    Console.WriteLine($"  {item.DateTime:HH:mm}: {item.Description}, " +
+                    $"temperature: {item.Temperature:F1} degC, " + $"wind: {item.WindSpeed:F2} m/s");
+                }
+            }
         }
         catch (Exception ex)
         {
-            exception = ex;
-            //How to handle an exception
-            //Your Code
-        }
-
-        foreach (var task in tasks)
-        {
-            //How to deal with successful and fault tasks
-            //Your Code
+            Console.WriteLine($"\nCould not retrieve forecast: {ex.GetBaseException().Message}");
         }
     }
-
-
-    //Event handler declaration
-    //Your Code
+    
+    private static void Service_WeatherForecastAvailable(object sender, string message)
+    {
+        Console.WriteLine($"Event: {message}");
+    }
 }
-
