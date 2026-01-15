@@ -32,9 +32,9 @@ class Program
         await PrintForecastTask(task3);
         await PrintForecastTask(task4);
 
-        Console.WriteLine("\nInvalid City Test");
-        var task5 = service.GetForecastAsync("ThisIsNotACity");
-        await PrintForecastTask(task5);
+        //Console.WriteLine("\nInvalid City Test");
+        //var task5 = service.GetForecastAsync("ThisIsNotACity");
+        //await PrintForecastTask(task5);
     }
 
     private static async Task PrintForecastTask(Task<Forecast> task)
